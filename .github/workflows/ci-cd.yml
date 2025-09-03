@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+# Grant required permissions for publishing containers & uploading SARIF
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 env:
   DOTNET_VERSION: '9.0.x'
   REGISTRY: ghcr.io
@@ -242,4 +248,4 @@ jobs:
         echo "   ?? 13 passing tests (Unit + Integration)"
         echo "   ?? Security scanned and production-ready"
         echo ""
-        echo "?? Your book review management system is live and ready!"        echo "?? Your book review management system is live and ready!"
+        echo "?? Your book review management system is live and ready!"
