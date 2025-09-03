@@ -171,16 +171,26 @@ jobs:
     
     steps:
     - name: Run Trivy vulnerability scanner
+      id: trivy
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:latest'
         format: 'sarif'
         output: 'trivy-results.sarif'
       continue-on-error: true  # Avoid failing pipeline solely due to vulnerabilities / transient scan issues
-    
+
+    - name: Check SARIF presence
+      id: sarif_check
+      run: |
+        if [ -f trivy-results.sarif ]; then
+          echo "present=true" >> $GITHUB_OUTPUT
+        else
+          echo "present=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
-      if: always() && exists('trivy-results.sarif')
+      if: steps.sarif_check.outputs.present == 'true'
       with:
         sarif_file: 'trivy-results.sarif'
 
