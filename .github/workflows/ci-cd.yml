@@ -44,7 +44,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
-    Option 1: Update CI/CD to Auto-Fix Formatting (Recommended)
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -243,4 +242,4 @@ jobs:
         echo "   ?? 13 passing tests (Unit + Integration)"
         echo "   ?? Security scanned and production-ready"
         echo ""
-        echo "?? Your book review management system is live and ready!"
+        echo "?? Your book review management system is live and ready!"        echo "?? Your book review management system is live and ready!"
