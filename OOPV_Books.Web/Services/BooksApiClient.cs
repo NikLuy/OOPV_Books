@@ -23,7 +23,7 @@ public class BooksApiClient
     {
         var response = await _httpClient.GetAsync("/api/books");
         response.EnsureSuccessStatusCode();
-        
+
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<List<Book>>(json, _jsonOptions) ?? new List<Book>();
     }
@@ -33,9 +33,9 @@ public class BooksApiClient
         var response = await _httpClient.GetAsync($"/api/books/{id}");
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             return null;
-            
+
         response.EnsureSuccessStatusCode();
-        
+
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<Book>(json, _jsonOptions);
     }
@@ -44,10 +44,10 @@ public class BooksApiClient
     {
         var json = JsonSerializer.Serialize(book, _jsonOptions);
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        
+
         var response = await _httpClient.PostAsync("/api/books", content);
         response.EnsureSuccessStatusCode();
-        
+
         var responseJson = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<Book>(responseJson, _jsonOptions)!;
     }
@@ -56,10 +56,10 @@ public class BooksApiClient
     {
         var json = JsonSerializer.Serialize(book, _jsonOptions);
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        
+
         var response = await _httpClient.PutAsync($"/api/books/{id}", content);
         response.EnsureSuccessStatusCode();
-        
+
         var responseJson = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<Book>(responseJson, _jsonOptions)!;
     }
@@ -75,7 +75,7 @@ public class BooksApiClient
     {
         var response = await _httpClient.GetAsync($"/api/books/{bookId}/reviews");
         response.EnsureSuccessStatusCode();
-        
+
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<List<Review>>(json, _jsonOptions) ?? new List<Review>();
     }
@@ -84,10 +84,10 @@ public class BooksApiClient
     {
         var json = JsonSerializer.Serialize(review, _jsonOptions);
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        
+
         var response = await _httpClient.PostAsync("/api/reviews", content);
         response.EnsureSuccessStatusCode();
-        
+
         var responseJson = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<Review>(responseJson, _jsonOptions)!;
     }
@@ -96,10 +96,10 @@ public class BooksApiClient
     {
         var json = JsonSerializer.Serialize(review, _jsonOptions);
         var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        
+
         var response = await _httpClient.PutAsync($"/api/reviews/{id}", content);
         response.EnsureSuccessStatusCode();
-        
+
         var responseJson = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<Review>(responseJson, _jsonOptions)!;
     }

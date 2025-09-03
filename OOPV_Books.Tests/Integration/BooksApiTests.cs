@@ -33,7 +33,7 @@ public class BooksApiTests : IClassFixture<WebApplicationFactory<Program>>
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
         var books = JsonSerializer.Deserialize<List<Book>>(content, _jsonOptions);
-        
+
         Assert.NotNull(books);
         Assert.True(books.Count > 0);
     }
@@ -62,7 +62,7 @@ public class BooksApiTests : IClassFixture<WebApplicationFactory<Program>>
         response.EnsureSuccessStatusCode();
         var responseContent = await response.Content.ReadAsStringAsync();
         var createdBook = JsonSerializer.Deserialize<Book>(responseContent, _jsonOptions);
-        
+
         Assert.NotNull(createdBook);
         Assert.Equal(createBookDto.Title, createdBook.Title);
         Assert.Equal(createBookDto.Author, createdBook.Author);
@@ -79,7 +79,7 @@ public class BooksApiTests : IClassFixture<WebApplicationFactory<Program>>
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
         var book = JsonSerializer.Deserialize<Book>(content, _jsonOptions);
-        
+
         Assert.NotNull(book);
         Assert.Equal(1, book.Id);
     }

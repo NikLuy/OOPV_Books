@@ -71,7 +71,7 @@ app.MapPost("/api/books", async (CreateBookDto dto, IBookService bookService) =>
         Description = dto.Description,
         Genre = dto.Genre
     };
-    
+
     var createdBook = await bookService.CreateBookAsync(book);
     return Results.Created($"/api/books/{createdBook.Id}", createdBook);
 })
@@ -89,7 +89,7 @@ app.MapPut("/api/books/{id}", async (int id, UpdateBookDto dto, IBookService boo
         Description = dto.Description,
         Genre = dto.Genre
     };
-    
+
     var updatedBook = await bookService.UpdateBookAsync(id, book);
     return updatedBook is not null ? Results.Ok(updatedBook) : Results.NotFound();
 })
@@ -143,7 +143,7 @@ app.MapPost("/api/reviews", async (CreateReviewDto dto, IReviewService reviewSer
         ReviewText = dto.ReviewText,
         Rating = dto.Rating
     };
-    
+
     var createdReview = await reviewService.CreateReviewAsync(review);
     return Results.Created($"/api/reviews/{createdReview.Id}", createdReview);
 })
@@ -158,7 +158,7 @@ app.MapPut("/api/reviews/{id}", async (int id, UpdateReviewDto dto, IReviewServi
         ReviewText = dto.ReviewText,
         Rating = dto.Rating
     };
-    
+
     var updatedReview = await reviewService.UpdateReviewAsync(id, review);
     return updatedReview is not null ? Results.Ok(updatedReview) : Results.NotFound();
 })

@@ -50,7 +50,7 @@ public class BookServiceTests
     {
         // Arrange
         var bookService = new InMemoryBookService();
-        
+
         // Act
         var book = await bookService.GetBookByIdAsync(1);
 
@@ -64,7 +64,7 @@ public class BookServiceTests
     {
         // Arrange
         var bookService = new InMemoryBookService();
-        
+
         // Act
         var book = await bookService.GetBookByIdAsync(999);
 
