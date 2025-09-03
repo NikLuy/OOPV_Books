@@ -1,0 +1,148 @@
+@page "/books"
+@using OOPV_Books.ApiService.Models
+@using OOPV_Books.Web.Services
+@inject BooksApiClient BooksApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Books</PageTitle>
+
+<h1>Books</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="NavigateToAddBook">
+        <span class="bi bi-plus"></span> Add New Book
+    </button>
+</div>
+
+@if (books == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!books.Any())
+{
+    <div class="alert alert-info">
+        <strong>No books found.</strong> Add your first book to get started.
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var book in books)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@book.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">by @book.Author</h6>
+                        <p class="card-text">@book.Description</p>
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <strong>Genre:</strong> @book.Genre<br />
+                                <strong>Published:</strong> @book.PublishedDate.ToString("yyyy")<br />
+                                <strong>ISBN:</strong> @book.ISBN
+                            </small>
+                        </div>
+                        <div class="mb-2">
+                            @if (book.Reviews.Any())
+                            {
+                                <div class="text-warning">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        @if (i <= book.AverageRating)
+                                        {
+                                            <span class="bi bi-star-fill"></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="bi bi-star"></span>
+                                        }
+                                    }
+                                    <span class="ms-1">(@book.AverageRating.ToString("F1")) - @book.Reviews.Count review(s)</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No reviews yet</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-outline-primary btn-sm" @onclick="() => ViewBookDetails(book.Id)">
+                                <span class="bi bi-eye"></span> View
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => EditBook(book.Id)">
+                                <span class="bi bi-pencil"></span> Edit
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteBook(book)">
+                                <span class="bi bi-trash"></span> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Book>? books;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBooks();
+    }
+
+    private async Task LoadBooks()
+    {
+        try
+        {
+            books = await BooksApi.GetBooksAsync();
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show a toast or error message
+            Console.WriteLine($"Error loading books: {ex.Message}");
+            books = new List<Book>();
+        }
+    }
+
+    private void NavigateToAddBook()
+    {
+        Navigation.NavigateTo("/books/add");
+    }
+
+    private void ViewBookDetails(int bookId)
+    {
+        Navigation.NavigateTo($"/books/{bookId}");
+    }
+
+    private void EditBook(int bookId)
+    {
+        Navigation.NavigateTo($"/books/edit/{bookId}");
+    }
+
+    private async Task DeleteBook(Book book)
+    {
+        if (await ShowConfirmDialog($"Are you sure you want to delete '{book.Title}'?"))
+        {
+            try
+            {
+                await BooksApi.DeleteBookAsync(book.Id);
+                await LoadBooks(); // Refresh the list
+            }
+            catch (Exception ex)
+            {
+                // Handle error
+                Console.WriteLine($"Error deleting book: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task<bool> ShowConfirmDialog(string message)
+    {
+        // Simple confirmation - in a real app you might use a modal dialog
+        return await Task.FromResult(true); // For now, always confirm
+    }
+}

@@ -1,0 +1,178 @@
+@page "/books/add"
+@page "/books/edit/{id:int}"
+@using OOPV_Books.ApiService.Models
+@using OOPV_Books.ApiService.DTOs
+@using OOPV_Books.Web.Services
+@inject BooksApiClient BooksApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@(IsEditMode ? "Edit Book" : "Add Book")</PageTitle>
+
+<h1>@(IsEditMode ? "Edit Book" : "Add Book")</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <EditForm Model="@bookModel" OnValidSubmit="@HandleValidSubmit" FormName="BookForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <InputText id="title" class="form-control" @bind-Value="bookModel.Title" />
+                <ValidationMessage For="@(() => bookModel.Title)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="author" class="form-label">Author</label>
+                <InputText id="author" class="form-control" @bind-Value="bookModel.Author" />
+                <ValidationMessage For="@(() => bookModel.Author)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="isbn" class="form-label">ISBN</label>
+                <InputText id="isbn" class="form-control" @bind-Value="bookModel.ISBN" />
+                <ValidationMessage For="@(() => bookModel.ISBN)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="publishedDate" class="form-label">Published Date</label>
+                <InputDate id="publishedDate" class="form-control" @bind-Value="bookModel.PublishedDate" />
+                <ValidationMessage For="@(() => bookModel.PublishedDate)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="genre" class="form-label">Genre</label>
+                <InputText id="genre" class="form-control" @bind-Value="bookModel.Genre" />
+                <ValidationMessage For="@(() => bookModel.Genre)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <InputTextArea id="description" class="form-control" rows="4" @bind-Value="bookModel.Description" />
+                <ValidationMessage For="@(() => bookModel.Description)" />
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    }
+                    @(IsEditMode ? "Update Book" : "Add Book")
+                </button>
+                <button type="button" class="btn btn-secondary ms-2" @onclick="Cancel">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private BookFormModel bookModel = new();
+    private bool isSubmitting = false;
+    private bool IsEditMode => Id.HasValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEditMode)
+        {
+            await LoadBook();
+        }
+        else
+        {
+            bookModel.PublishedDate = DateTime.Today;
+        }
+    }
+
+    private async Task LoadBook()
+    {
+        try
+        {
+            var book = await BooksApi.GetBookByIdAsync(Id!.Value);
+            if (book != null)
+            {
+                bookModel = new BookFormModel
+                {
+                    Title = book.Title,
+                    Author = book.Author,
+                    ISBN = book.ISBN,
+                    PublishedDate = book.PublishedDate,
+                    Genre = book.Genre,
+                    Description = book.Description
+                };
+            }
+            else
+            {
+                // Book not found, redirect to books list
+                Navigation.NavigateTo("/books");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading book: {ex.Message}");
+            Navigation.NavigateTo("/books");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+        try
+        {
+            if (IsEditMode)
+            {
+                var updateDto = new UpdateBookDto
+                {
+                    Title = bookModel.Title,
+                    Author = bookModel.Author,
+                    ISBN = bookModel.ISBN,
+                    PublishedDate = bookModel.PublishedDate,
+                    Genre = bookModel.Genre,
+                    Description = bookModel.Description
+                };
+                await BooksApi.UpdateBookAsync(Id!.Value, updateDto);
+            }
+            else
+            {
+                var createDto = new CreateBookDto
+                {
+                    Title = bookModel.Title,
+                    Author = bookModel.Author,
+                    ISBN = bookModel.ISBN,
+                    PublishedDate = bookModel.PublishedDate,
+                    Genre = bookModel.Genre,
+                    Description = bookModel.Description
+                };
+                await BooksApi.CreateBookAsync(createDto);
+            }
+
+            Navigation.NavigateTo("/books");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving book: {ex.Message}");
+            // In a real app, show an error message to the user
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/books");
+    }
+
+    public class BookFormModel
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Author { get; set; } = string.Empty;
+        public string ISBN { get; set; } = string.Empty;
+        public DateTime PublishedDate { get; set; }
+        public string Genre { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+}

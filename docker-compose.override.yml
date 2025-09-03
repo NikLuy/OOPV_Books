@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  oopv-books-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./OOPV_Books.ApiService:/app/src
+    ports:
+      - "5001:8080"
+
+  oopv-books-web:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ApiService__BaseUrl=http://oopv-books-api:8080
+    volumes:
+      - ./OOPV_Books.Web:/app/src
+    ports:
+      - "5003:8080"

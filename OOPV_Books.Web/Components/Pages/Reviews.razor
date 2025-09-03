@@ -1,0 +1,114 @@
+@page "/reviews"
+@using OOPV_Books.ApiService.Models
+@using OOPV_Books.Web.Services
+@inject BooksApiClient BooksApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>All Reviews</PageTitle>
+
+<h1>All Reviews</h1>
+
+@if (reviews == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!reviews.Any())
+{
+    <div class="alert alert-info">
+        <strong>No reviews found.</strong> Visit the books page to add reviews for books.
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var review in reviews.OrderByDescending(r => r.ReviewDate))
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">@review.ReviewerName</h6>
+                            <small class="text-muted">@review.ReviewDate.ToString("MMM dd, yyyy")</small>
+                        </div>
+                        
+                        <div class="text-warning mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                @if (i <= review.Rating)
+                                {
+                                    <span class="bi bi-star-fill"></span>
+                                }
+                                else
+                                {
+                                    <span class="bi bi-star"></span>
+                                }
+                            }
+                            <span class="ms-1 text-muted">(@review.Rating/5)</span>
+                        </div>
+
+                        @if (books.TryGetValue(review.BookId, out var book))
+                        {
+                            <h6 class="text-primary mb-2">@book.Title</h6>
+                            <small class="text-muted d-block mb-2">by @book.Author</small>
+                        }
+                        else
+                        {
+                            <h6 class="text-muted mb-2">Book ID: @review.BookId</h6>
+                        }
+
+                        <p class="card-text">@review.ReviewText</p>
+                    </div>
+                    <div class="card-footer">
+                        @if (books.TryGetValue(review.BookId, out var bookForLink))
+                        {
+                            <button class="btn btn-outline-primary btn-sm" @onclick="() => ViewBook(review.BookId)">
+                                <span class="bi bi-book"></span> View Book
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Review>? reviews;
+    private Dictionary<int, Book> books = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReviewsAndBooks();
+    }
+
+    private async Task LoadReviewsAndBooks()
+    {
+        try
+        {
+            // Load all books first to have their details for display
+            var allBooks = await BooksApi.GetBooksAsync();
+            books = allBooks.ToDictionary(b => b.Id, b => b);
+
+            // Get all reviews by loading reviews for each book
+            var allReviews = new List<Review>();
+            foreach (var book in allBooks)
+            {
+                var bookReviews = await BooksApi.GetReviewsByBookIdAsync(book.Id);
+                allReviews.AddRange(bookReviews);
+            }
+
+            reviews = allReviews;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading reviews: {ex.Message}");
+            reviews = new List<Review>();
+        }
+    }
+
+    private void ViewBook(int bookId)
+    {
+        Navigation.NavigateTo($"/books/{bookId}");
+    }
+}

@@ -1,0 +1,257 @@
+@page "/books/{id:int}"
+@using OOPV_Books.ApiService.Models
+@using OOPV_Books.ApiService.DTOs
+@using OOPV_Books.Web.Services
+@inject BooksApiClient BooksApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@(book?.Title ?? "Book Details")</PageTitle>
+
+@if (book == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h1>@book.Title</h1>
+                    <h4 class="text-muted">by @book.Author</h4>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2" @onclick="EditBook">
+                        <span class="bi bi-pencil"></span> Edit
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="BackToBooks">
+                        <span class="bi bi-arrow-left"></span> Back to Books
+                    </button>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Book Information</h5>
+                    <div class="row">
+                        <div class="col-sm-3"><strong>Genre:</strong></div>
+                        <div class="col-sm-9">@book.Genre</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-3"><strong>Published:</strong></div>
+                        <div class="col-sm-9">@book.PublishedDate.ToString("MMMM yyyy")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-3"><strong>ISBN:</strong></div>
+                        <div class="col-sm-9">@book.ISBN</div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-3"><strong>Description:</strong></div>
+                        <div class="col-sm-9">@book.Description</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Rating</h5>
+                    @if (reviews.Any())
+                    {
+                        <div class="text-center mb-3">
+                            <div class="display-4 text-warning">@book.AverageRating.ToString("F1")</div>
+                            <div class="text-warning mb-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    @if (i <= book.AverageRating)
+                                    {
+                                        <span class="bi bi-star-fill"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="bi bi-star"></span>
+                                    }
+                                }
+                            </div>
+                            <div class="text-muted">Based on @reviews.Count review(s)</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted mb-3">
+                            <div class="display-6">No ratings yet</div>
+                            <div>Be the first to review this book!</div>
+                        </div>
+                    }
+                    
+                    <button class="btn btn-primary w-100" @onclick="AddReview">
+                        <span class="bi bi-plus"></span> Add Review
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Reviews (@reviews.Count)</h3>
+            
+            @if (showAddReviewForm)
+            {
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Add Your Review</h5>
+                        <EditForm Model="@reviewModel" OnValidSubmit="@SubmitReview" FormName="ReviewForm">
+                            <div class="mb-3">
+                                <label for="reviewerName" class="form-label">Your Name</label>
+                                <InputText id="reviewerName" class="form-control" @bind-Value="reviewModel.ReviewerName" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="rating" class="form-label">Rating</label>
+                                <InputSelect id="rating" class="form-select" @bind-Value="reviewModel.Rating">
+                                    <option value="1">1 Star</option>
+                                    <option value="2">2 Stars</option>
+                                    <option value="3">3 Stars</option>
+                                    <option value="4">4 Stars</option>
+                                    <option value="5">5 Stars</option>
+                                </InputSelect>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reviewText" class="form-label">Review</label>
+                                <InputTextArea id="reviewText" class="form-control" rows="4" @bind-Value="reviewModel.ReviewText" />
+                            </div>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                                <button type="button" class="btn btn-secondary ms-2" @onclick="CancelAddReview">Cancel</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+
+            @if (!reviews.Any())
+            {
+                <div class="alert alert-info">
+                    No reviews yet. Be the first to review this book!
+                </div>
+            }
+            else
+            {
+                @foreach (var review in reviews.OrderByDescending(r => r.ReviewDate))
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title">@review.ReviewerName</h6>
+                                    <div class="text-warning mb-2">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            @if (i <= review.Rating)
+                                            {
+                                                <span class="bi bi-star-fill"></span>
+                                            }
+                                            else
+                                            {
+                                                <span class="bi bi-star"></span>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                <small class="text-muted">@review.ReviewDate.ToString("MMM dd, yyyy")</small>
+                            </div>
+                            <p class="card-text">@review.ReviewText</p>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Book? book;
+    private List<Review> reviews = new();
+    private bool showAddReviewForm = false;
+    private ReviewFormModel reviewModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookAndReviews();
+    }
+
+    private async Task LoadBookAndReviews()
+    {
+        try
+        {
+            book = await BooksApi.GetBookByIdAsync(Id);
+            if (book == null)
+            {
+                Navigation.NavigateTo("/books");
+                return;
+            }
+
+            reviews = await BooksApi.GetReviewsByBookIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading book details: {ex.Message}");
+            Navigation.NavigateTo("/books");
+        }
+    }
+
+    private void EditBook()
+    {
+        Navigation.NavigateTo($"/books/edit/{Id}");
+    }
+
+    private void BackToBooks()
+    {
+        Navigation.NavigateTo("/books");
+    }
+
+    private void AddReview()
+    {
+        reviewModel = new ReviewFormModel { BookId = Id, Rating = 5 };
+        showAddReviewForm = true;
+    }
+
+    private void CancelAddReview()
+    {
+        showAddReviewForm = false;
+        reviewModel = new();
+    }
+
+    private async Task SubmitReview()
+    {
+        try
+        {
+            var createDto = new CreateReviewDto
+            {
+                BookId = reviewModel.BookId,
+                ReviewerName = reviewModel.ReviewerName,
+                ReviewText = reviewModel.ReviewText,
+                Rating = reviewModel.Rating
+            };
+
+            await BooksApi.CreateReviewAsync(createDto);
+            await LoadBookAndReviews(); // Refresh data
+            CancelAddReview();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error submitting review: {ex.Message}");
+        }
+    }
+
+    public class ReviewFormModel
+    {
+        public int BookId { get; set; }
+        public string ReviewerName { get; set; } = string.Empty;
+        public string ReviewText { get; set; } = string.Empty;
+        public int Rating { get; set; } = 5;
+    }
+}
